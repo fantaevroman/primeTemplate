@@ -23,13 +23,6 @@ class TemplateEngine constructor(
   fun renderTemplate(path: List<String>, variables: Map<String, String>): Optional<Template> {
     return findTemplate(path)
       .map { template ->
-        val repeatBlock = RepeatUntil(
-          AnyCharacter(),
-          block()
-        )
-
-        // val parsedTemplateContext = RepeatUntil(Any(block, AnyCharacter()), End()).parse(createContext(template.text))
-
         val parsedTemplateContexts= listOf(block().parse(createContext(template.text)))
         val transformedContexts = interpreter.performContextTransformation(parsedTemplateContexts, template)
         val templateBody = interpreter.renderContexts(transformedContexts)

@@ -5,18 +5,16 @@ import prime.combinator.ParsingContext
 import prime.combinator.ParsingError
 import java.util.*
 
-
 fun createContext(text: String) = ParsingContext(text, -1, -1, emptyMap(), "empty", Optional.empty())
 
-
 abstract class EndOfInputParser : Parser {
-
   override fun parse(context: ParsingContext): ParsingContext {
     val currentIndex = context.indexStart + 1
     return if (context.text.length - 1 < currentIndex) {
       context.copy(
         error = Optional.of(ParsingError("Can't parse at index:[${currentIndex}] end of text")),
         type = getType(),
+        indexStart = currentIndex,
         indexEnd = currentIndex,
         context = emptyMap()
       )
@@ -34,12 +32,11 @@ class Long : EndOfInputParser() {
   override fun parseNext(context: ParsingContext): ParsingContext {
     val scanner = Scanner(context.text)
     val currentIndex = context.indexEnd + 1
-    val indexEnd = currentIndex + 1
 
     return if (scanner.hasNextLong()) {
       context.copy(
         indexStart = currentIndex,
-        indexEnd = indexEnd,
+        indexEnd = currentIndex,
         context = hashMapOf(
           Pair("longValue", scanner.nextInt())
         )
@@ -48,7 +45,8 @@ class Long : EndOfInputParser() {
       context.copy(
         error = Optional.of(ParsingError("Can't parse Long at index:[${currentIndex}]")),
         type = "Long",
-        indexEnd = indexEnd,
+        indexStart = currentIndex,
+        indexEnd = currentIndex,
         context = emptyMap()
       )
     }
@@ -58,12 +56,11 @@ class Long : EndOfInputParser() {
 class AnyCharacter : EndOfInputParser() {
   override fun getType() = "AnyCharacter"
 
-
   override fun parseNext(context: ParsingContext): ParsingContext {
     val currentIndex = context.indexEnd + 1
     return context.copy(
       indexStart = currentIndex,
-      indexEnd = currentIndex + 1,
+      indexEnd = currentIndex,
       context = hashMapOf(Pair("anyCharacter", context.text[currentIndex.toInt()])),
       type = getType()
     )
@@ -113,6 +110,8 @@ class Str(val string: String) : Parser {
         )
       } else {
         context.copy(
+          indexStart = currentIndex,
+          indexEnd = currentIndex + string.length - 1,
           error = Optional.of(ParsingError("Can't parse at index:[${currentIndex}] [$string] not found")),
           type = "Str",
           context = emptyMap()
@@ -131,7 +130,7 @@ class Character(private val char: Char) : EndOfInputParser() {
     return if (next.equals(char.toString())) {
       context.copy(
         indexStart = currentIndex,
-        indexEnd = currentIndex + 1,
+        indexEnd = currentIndex,
         context = hashMapOf(Pair("character", next)),
         type = getType()
       )
@@ -141,7 +140,9 @@ class Character(private val char: Char) : EndOfInputParser() {
           ParsingError("Can't parse character at index:[${currentIndex}], required:[$char] but was:[$next]")
         ),
         type = getType(),
-        context = emptyMap()
+        context = emptyMap(),
+        indexStart = currentIndex,
+        indexEnd = currentIndex,
       )
     }
   }
@@ -189,7 +190,8 @@ class RepeatableBetween(
       val repeaters = (between.context["repeaters"] as List<ParsingContext>)
       it.copy(context = hashMapOf(Pair("between", repeaters)))
     }.parse(context).copy(
-      type = getType()
+      type = getType(),
+      indexStart = context.indexStart + 1
     )
   }
 
@@ -225,10 +227,11 @@ class End() : Parser {
   override fun getType() = "End"
 
   override fun parse(context: ParsingContext): ParsingContext {
-    val currentIndex = context.index + 1
+    val currentIndex = context.indexStart + 1
     return if (context.text.length - 1 < currentIndex) {
       context.copy(
-        index = currentIndex,
+        indexStart = currentIndex,
+        indexEnd = currentIndex,
         context = hashMapOf(Pair("end", "reached")),
         type = getType()
       )

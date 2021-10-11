@@ -8,8 +8,8 @@ class PrimeTemplateInterpreter(val supportedInstructions: Set<Instruction>) {
 
   fun performContextTransformation(contexts: List<ParsingContext>, template: Template): List<ParsingContext> {
     val withBody = mutableListOf<ParsingContext>()
+    withBody.add(ParsingContext("", 0,template.text.length.toLong() - 1, mapOf(Pair("body", template.text)), "body", Optional.empty()))
     withBody.addAll(contexts)
-    withBody.add(ParsingContext("", 0, mapOf(Pair("body", template.text)), "body", Optional.empty()))
     return withBody
   }
 
@@ -23,7 +23,7 @@ class PrimeTemplateInterpreter(val supportedInstructions: Set<Instruction>) {
     }.forEach { context ->
       val instruction = supportedInstructions.find { it.supportContext(context) }
       if (instruction == null) {
-        return Pair("Can't parse instruction at index: ${context.index}", bodyText)
+        return Pair("Can't parse instruction at index: ${context.indexStart}", bodyText)
       } else {
         instruction.replaceInText(mutableTemplate)
       }
