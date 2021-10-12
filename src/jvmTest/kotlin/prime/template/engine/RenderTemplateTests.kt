@@ -5,6 +5,7 @@ import prime.template.engine.classloader.ClassLoaderTemplateFetcher
 import prime.template.engine.common.NoTemplateCache
 import prime.template.engine.common.SamePathResolver
 import prime.template.interpreter.PrimeTemplateInterpreter
+import prime.template.interpreter.VariableInstruction
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -17,13 +18,12 @@ class RenderTemplateTests {
         ClassLoaderTemplateFetcher(javaClass),
         NoTemplateCache(),
         SamePathResolver(),
-        PrimeTemplateInterpreter(hashSetOf())
+        PrimeTemplateInterpreter(hashSetOf(VariableInstruction()))
       ).renderTemplate(
         listOf("prime","template","engine","testRenderHelloWorld", "helloWorld.txt.prime"),
-        emptyMap()
+        hashMapOf(Pair("name", "User's name"))
       )
 
-
-    assertEquals(Optional.of("Hello world!"), renderedTemplate)
+    assertEquals(Optional.of(Template("Hello User's name!")), renderedTemplate)
   }
 }

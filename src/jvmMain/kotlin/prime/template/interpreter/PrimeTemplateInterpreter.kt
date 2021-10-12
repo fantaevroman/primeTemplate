@@ -13,19 +13,19 @@ class PrimeTemplateInterpreter(val supportedInstructions: Set<Instruction>) {
     return withBody
   }
 
-  fun renderContexts(contexts: List<ParsingContext>): Pair<String?, String> {
+  fun renderContexts(contexts: List<ParsingContext>, variables: Map<String, String>): Pair<String?, String> {
     val body = contexts.first { it.type == "body" }
     val bodyText = body.context["body"] as String
     val mutableTemplate = StringBuilder(bodyText)
 
     contexts.filter {
-      it.type != "body"
+      it.type == "Block"
     }.forEach { context ->
       val instruction = supportedInstructions.find { it.supportContext(context) }
       if (instruction == null) {
-        return Pair("Can't parse instruction at index: ${context.indexStart}", bodyText)
+        return Pair("Can't parse instruction at between index: [${context.indexStart}, ${context.indexEnd} ]", bodyText)
       } else {
-        instruction.replaceInText(mutableTemplate)
+        instruction.replaceInText(context, mutableTemplate, variables)
       }
     }
 
