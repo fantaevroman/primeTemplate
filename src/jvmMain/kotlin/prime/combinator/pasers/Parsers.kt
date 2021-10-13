@@ -230,8 +230,8 @@ class Character(private val char: Char) : EndOfInputParser() {
     }
 }
 
-class SequenceOf(
-    private vararg val parsers: Parser
+open class SequenceOf(
+     vararg val parsers: Parser
 ) : Parser {
     override fun getType() = "SequenceOf"
 
@@ -241,7 +241,11 @@ class SequenceOf(
         var currentContext = context
 
         while (parsersIterator.hasNext()) {
-            currentContext = parsersIterator.next().parse(currentContext)
+            val nextParser = parsersIterator.withIndex().next()
+            val nextTransformedParser =
+                oneEachTransform(nextParser.index, currentContext, nextParser.value, successSequence)
+
+            currentContext = nextTransformedParser.parse(currentContext)
             if (currentContext.success()) {
                 successSequence.add(currentContext)
             } else {
@@ -257,17 +261,53 @@ class SequenceOf(
             context = hashMapOf(Pair("sequence", successSequence))
         )
     }
+
+    open fun oneEachTransform(
+        index: Int,
+        currentContext: ParsingContext,
+        currentParser: Parser,
+        previous: List<ParsingContext>,
+    ): Parser {
+        return currentParser
+    }
+
+    fun mapEach(
+        transformer: (
+            currentContext: ParsingContext,
+            currentParser: Parser,
+            previous: List<ParsingContext>,
+            currentIndex: Int
+        ) -> Parser
+    ) = object : SequenceOf(*this.parsers) {
+        override fun getType(): String {
+            return super.getType()
+        }
+
+        override fun parse(context: ParsingContext): ParsingContext {
+            return super.parse(context)
+        }
+
+        override fun oneEachTransform(
+            index: Int,
+            currentContext: ParsingContext,
+            currentParser: Parser,
+            previous: List<ParsingContext>,
+        ): Parser {
+            return transformer(currentContext, currentParser, previous, index)
+        }
+    }
 }
 
 class RepeatableBetween(
     private val left: Parser,
     private val between: Parser,
-    private val right: Parser
+    private val right: Parser,
+    private val sequenceOf: Parser = SequenceOf(left, RepeatUntil(between, right))
 ) : Parser {
     override fun getType() = "RepeatableBetween"
 
     override fun parse(context: ParsingContext): ParsingContext {
-        return SequenceOf(left, RepeatUntil(between, right)).map {
+        return sequenceOf.map {
             val between = (it.context["sequence"] as List<ParsingContext>)[1]
             val repeaters = (between.context["repeaters"] as List<ParsingContext>)
             it.copy(context = hashMapOf(Pair("between", repeaters)))
@@ -276,6 +316,15 @@ class RepeatableBetween(
             indexStart = context.indexStart + 1
         )
     }
+
+    fun mapEach(transformer: (currentContext: ParsingContext, currentParser: Parser, previous: List<ParsingContext>, currentIndex: Int) -> Parser
+    ) = RepeatableBetween(left, between, right,
+        SequenceOf(left, RepeatUntil(between, right))
+            .mapEach { currentContext, currentParser, previous, currentIndex ->
+                transformer(currentContext, currentParser, previous, currentIndex)
+            }
+    )
+
 
     fun joinBetween(joinBetween: (contexts: List<ParsingContext>) -> ParsingContext): Parser {
         return this.map { original ->
