@@ -14,6 +14,9 @@ data class ParsingContext(
 ) {
   fun fail() = error.isPresent
   fun success() = !error.isPresent
+  override fun toString(): String {
+    return "ParsingContext(type='$type', error=$error)"
+  }
 }
 
 interface Parser {

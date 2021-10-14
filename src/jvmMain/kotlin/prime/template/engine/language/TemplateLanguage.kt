@@ -24,15 +24,18 @@ fun block() = generalBlock(Str("{{"), Str("}}"))
 fun doubleBlock() = RepeatableBetween(block(), AnyCharacter(), block())
     .mapEach { currentContext, currentParser, previous, currentIndex ->
         if (currentIndex == 2) {
-            val firstBlockBody = (previous[0].context["left"] as ParsingContext).context["body"]!!
             val firstCommandInBody =
-                EnglishLetters().parse(createContext(firstBlockBody.toString())).context["letters"].toString()
+                EnglishLetters()
+                    .parse(createContext(previous[0].context["body"].toString().trim()))
+                    .context["letters"].toString()
             generalBlock(Str("{{ end $firstCommandInBody"), Str("}}"))
         } else {
             currentParser
         }
     }
-    .joinBetween { AnyCharacter.join(it) }
+    .joinBetween {
+        AnyCharacter.join(it)
+    }
     .map {
         it.copy(
             context = hashMapOf(
