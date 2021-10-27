@@ -17,15 +17,16 @@ class PrimeTemplateInterpreter(val supportedInstructions: Set<Instruction>) {
     val body = contexts.first { it.type == "body" }
     val bodyText = body.context["body"] as String
     val mutableTemplate = StringBuilder(bodyText)
+    var charactersShift = 0
 
     contexts.filter {
-      it.type == "Block"
+      it.type == "Block"  || it.type == "DoubleBlock"
     }.forEach { context ->
       val instruction = supportedInstructions.find { it.supportContext(context) }
       if (instruction == null) {
         return Pair("Can't parse instruction at between index: [${context.indexStart}, ${context.indexEnd} ]", bodyText)
       } else {
-        instruction.replaceInText(context, mutableTemplate, variables)
+        charactersShift = instruction.replaceInText(context, mutableTemplate, variables, charactersShift)
       }
     }
 

@@ -91,7 +91,7 @@ class AnyCharacter : EndOfInputParser() {
 
 }
 
-class Str(val string: String) : Parser {
+open class Str(val string: String) : Parser {
     override fun getType() = "Str"
 
     override fun parse(context: ParsingContext): ParsingContext {
@@ -129,7 +129,29 @@ class Str(val string: String) : Parser {
     }
 }
 
-class EnglishLetters() : Parser {
+class DoubleQuote() : Str(""""""")
+
+class Spaces() : Parser {
+    override fun getType() = "Spaces"
+    override fun parse(context: ParsingContext): ParsingContext =
+        RepeatUntil(Character(' '), Not(Character(' ')))
+            .joinRepeaters {
+                AnyCharacter.join(it, "", "space")
+            }
+            .map {
+                it.copy(
+                    type = "Spaces",
+                    context = hashMapOf(
+                        Pair(
+                            "spaces",
+                            (it.context["repeater"] as ParsingContext).context["str"] as String
+                        )
+                    )
+                )
+            }.parse(context)
+}
+
+open class EnglishLetters() : Parser {
     override fun getType() = "EnglishLetters"
     override fun parse(context: ParsingContext): ParsingContext =
         RepeatUntil(EnglishLetter(), Not(EnglishLetter()))
@@ -147,6 +169,23 @@ class EnglishLetters() : Parser {
                     )
                 )
             }.parse(context)
+}
+
+class Word() : Parser {
+    override fun getType() = "Word"
+
+    override fun parse(context: ParsingContext): ParsingContext {
+        return EnglishLetters().map {
+            it.copy(
+                context =  hashMapOf(
+                    Pair(
+                        "word",
+                        it.context["letters"]!!
+                    )
+                )
+            )
+        }.parse(context)
+    }
 }
 
 class EnglishDigit : EndOfInputParser() {
@@ -207,9 +246,9 @@ class Character(private val char: Char) : EndOfInputParser() {
     override fun getType() = "Character"
 
     override fun parseNext(context: ParsingContext): ParsingContext {
-        val next = Scanner(context.text).next()
         val currentIndex = context.indexEnd + 1
-        return if (next.equals(char.toString())) {
+        val next = context.text.toCharArray()[currentIndex.toInt()]
+        return if (next == char) {
             context.copy(
                 indexStart = currentIndex,
                 indexEnd = currentIndex,
