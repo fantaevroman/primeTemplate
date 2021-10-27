@@ -4,83 +4,89 @@ import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
 
 interface Instruction {
-    fun supportContext(parsingContext: ParsingContext): Boolean
+    fun supportContext(templateInstructionContext: ParsingContext): Boolean
     fun replaceInText(
-        parsingContext: ParsingContext,
+        templateInstructionContext: ParsingContext,
         text: StringBuilder,
         variables: Map<String, String>,
         charsShift: Int
     ): Int
 }
 
-class VariableInstruction() : Instruction {
-    private fun parseInstruction(parsingContext: ParsingContext): ParsingContext {
-        val instructionBody = parsingContext.context["body"] as String
+abstract class BlockInstruction(val blockType: String) : Instruction {
+    abstract fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext
+    abstract fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String
+
+    override fun supportContext(templateInstructionContext: ParsingContext): Boolean {
+        return if (templateInstructionContext.type == blockType) {
+            processInstruction(templateInstructionContext).success()
+        } else {
+            false
+        }
+    }
+
+    private fun replace(
+        templateInstructionContext: ParsingContext,
+        text: StringBuilder,
+        charsShift: Int,
+        newText: String
+    ): Int {
+        val start = templateInstructionContext.indexStart.toInt() + charsShift
+        val end = templateInstructionContext.indexEnd.toInt() + charsShift + 1
+        text.replace(start, end, newText)
+        return newText.length - (end - start)
+    }
+
+    override fun replaceInText(
+        templateInstructionContext: ParsingContext,
+        text: StringBuilder,
+        variables: Map<String, String>,
+        charsShift: Int
+    ): Int {
+        val processedInstructionContext = processInstruction(templateInstructionContext)
+        val renderedInstructionText = generateNewText(processedInstructionContext, variables)
+        return replace(templateInstructionContext, text, charsShift, renderedInstructionText)
+    }
+}
+
+class VariableInstruction() : BlockInstruction("Block") {
+    override fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext {
+        val instructionBody = templateInstructionContext.context["body"] as String
         val instructionBodyTrimmed = instructionBody.trim()
         return EnglishLetters()
             .parse(createContext(instructionBodyTrimmed))
     }
 
-    override fun supportContext(parsingContext: ParsingContext) : Boolean {
-        return if(parsingContext.type == "Block"){
-            parseInstruction(parsingContext).success()
-        }else {
-            false
-        }
-    }
-
-    override fun replaceInText(
-        parsingContext: ParsingContext,
-        text: StringBuilder,
-        variables: Map<String, String>,
-        charsShift: Int
-    ): Int {
-        val parsedInstruction = parseInstruction(parsingContext)
-        val variableName = parsedInstruction.context["letters"] as String
-        val newText = variables.getOrDefault(variableName, "variable:[$variableName] not found")
-        val start = parsingContext.indexStart.toInt() + charsShift
-        val end = parsingContext.indexEnd.toInt() + charsShift + 1
-        text.replace(start, end, newText)
-
-        return newText.length - (end - start)
+    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
+        val variableName = processedInstructionContext.context["letters"] as String
+        return variables.getOrDefault(variableName, "variable:[$variableName] not found")
     }
 }
 
-class SectionInstruction() : Instruction {
+class SectionInstruction() : BlockInstruction("DoubleBlock") {
     val sequenceOf = SequenceOf(Str("section"), Spaces(), DoubleQuote(), Word(), DoubleQuote()).map {
         it.copy(
-            context = hashMapOf(Pair("sectionName", (it.context["sequence"] as List<ParsingContext>)[3].context["word"].toString()))
+            context = hashMapOf(
+                Pair(
+                    "sectionName",
+                    (it.context["sequence"] as List<ParsingContext>)[3].context["word"].toString()
+                )
+            )
         )
     }
 
-    private fun parseInstruction(parsingContext: ParsingContext): ParsingContext {
-        val topBlockBody = (parsingContext.context["topBlock"] as String).trim()
+    override fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext {
+        val topBlockBody = (templateInstructionContext.context["topBlock"] as String).trim()
         val parsed = sequenceOf.parse(createContext(topBlockBody))
         return parsed.copy(
-            context = hashMapOf(Pair("sectionName",parsed.context["sectionName"].toString()),
-                Pair("body", parsingContext.context["between"].toString()))
+            context = hashMapOf(
+                Pair("sectionName", parsed.context["sectionName"].toString()),
+                Pair("body", templateInstructionContext.context["between"].toString())
+            )
         )
     }
 
-    override fun supportContext(parsingContext: ParsingContext) : Boolean {
-        return if(parsingContext.type == "DoubleBlock"){
-            parseInstruction(parsingContext).success()
-        }else {
-            false
-        }
-    }
-
-    override fun replaceInText(
-        parsingContext: ParsingContext,
-        text: StringBuilder,
-        variables: Map<String, String>,
-        charsShift: Int
-    ): Int {
-        val parsedSection = parseInstruction(parsingContext)
-        val start = parsingContext.indexStart.toInt() + charsShift
-        val end = parsingContext.indexEnd.toInt()  + charsShift + 1
-        val newText = parsedSection.context["body"].toString()
-        text.replace(start,end, newText)
-        return newText.length - (end - start)
+    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
+        return processedInstructionContext.context["body"].toString()
     }
 }
