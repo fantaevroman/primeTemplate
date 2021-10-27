@@ -1,7 +1,6 @@
 package prime.template.interpreter
 
 import prime.combinator.ParsingContext
-import prime.combinator.pasers.*
 
 interface Instruction {
     fun supportContext(templateInstructionContext: ParsingContext): Boolean
@@ -49,44 +48,3 @@ abstract class BlockInstruction(val blockType: String) : Instruction {
     }
 }
 
-class VariableInstruction() : BlockInstruction("Block") {
-    override fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext {
-        val instructionBody = templateInstructionContext.context["body"] as String
-        val instructionBodyTrimmed = instructionBody.trim()
-        return EnglishLetters()
-            .parse(createContext(instructionBodyTrimmed))
-    }
-
-    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
-        val variableName = processedInstructionContext.context["letters"] as String
-        return variables.getOrDefault(variableName, "variable:[$variableName] not found")
-    }
-}
-
-class SectionInstruction() : BlockInstruction("DoubleBlock") {
-    val sequenceOf = SequenceOf(Str("section"), Spaces(), DoubleQuote(), Word(), DoubleQuote()).map {
-        it.copy(
-            context = hashMapOf(
-                Pair(
-                    "sectionName",
-                    (it.context["sequence"] as List<ParsingContext>)[3].context["word"].toString()
-                )
-            )
-        )
-    }
-
-    override fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext {
-        val topBlockBody = (templateInstructionContext.context["topBlock"] as String).trim()
-        val parsed = sequenceOf.parse(createContext(topBlockBody))
-        return parsed.copy(
-            context = hashMapOf(
-                Pair("sectionName", parsed.context["sectionName"].toString()),
-                Pair("body", templateInstructionContext.context["between"].toString())
-            )
-        )
-    }
-
-    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
-        return processedInstructionContext.context["body"].toString()
-    }
-}
