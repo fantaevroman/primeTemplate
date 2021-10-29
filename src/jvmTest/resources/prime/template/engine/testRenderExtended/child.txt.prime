@@ -1,0 +1,2 @@
+{{ extend "/prime/template/engine/testRenderExtended/parent.txt.prime" }}
+Child C

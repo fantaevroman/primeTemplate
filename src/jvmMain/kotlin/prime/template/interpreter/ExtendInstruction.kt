@@ -4,7 +4,13 @@ import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
 
 class ExtendInstruction() : BlockInstruction("Block") {
-    val sequenceOf = SequenceOf(Str("extend"), Spaces(), DoubleQuote(), Word(), DoubleQuote()).map {
+    val sequenceOf = SequenceOf(
+        Str("extend"),
+        Spaces(),
+        DoubleQuote(),
+        CustomWord(EnglishLetter().asChar(), Character('/'), Character('.')),
+        DoubleQuote()
+    ).map {
         it.copy(
             context = hashMapOf(
                 Pair(
@@ -19,7 +25,7 @@ class ExtendInstruction() : BlockInstruction("Block") {
         return sequenceOf.parse(createContext((templateInstructionContext.context["body"] as String).trim()))
     }
 
-    fun getPath(templateInstructionContext: ParsingContext): String{
+    fun getPath(templateInstructionContext: ParsingContext): String {
         return sequenceOf.parse(createContext((templateInstructionContext.context["body"] as String).trim())).context["path"].toString()
     }
 

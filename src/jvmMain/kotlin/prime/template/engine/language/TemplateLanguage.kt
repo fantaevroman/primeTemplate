@@ -25,9 +25,9 @@ fun doubleBlock() = RepeatableBetween(block(), AnyCharacter(), block())
     .mapEach { currentContext, currentParser, previous, currentIndex ->
         if (currentIndex == 2) {
             val firstCommandInBody =
-                EnglishLetters()
+                Word()
                     .parse(createContext(previous[0].context["body"].toString().trim()))
-                    .context["letters"].toString()
+                    .context["word"].toString()
             generalBlock(Str("{{ end $firstCommandInBody"), Str("}}"))
         } else {
             currentParser

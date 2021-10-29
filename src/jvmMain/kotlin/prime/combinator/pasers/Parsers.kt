@@ -151,19 +151,22 @@ class Spaces() : Parser {
             }.parse(context)
 }
 
-open class EnglishLetters() : Parser {
-    override fun getType() = "EnglishLetters"
+open class RepeatAndJoin(
+    val parser: Parser,
+    val joinBetween: (contexts: List<ParsingContext>) -> ParsingContext
+) : Parser {
+    override fun getType() = "RepeatAndJoin"
     override fun parse(context: ParsingContext): ParsingContext =
-        RepeatUntil(EnglishLetter(), Not(EnglishLetter()))
+        RepeatUntil(parser, Not(parser))
             .joinRepeaters {
-                AnyCharacter.join(it, "", "letter")
+                joinBetween(it)
             }
             .map {
                 it.copy(
-                    type = "EnglishLetters",
+                    type = "RepeatAndJoin",
                     context = hashMapOf(
                         Pair(
-                            "letters",
+                            "joint",
                             (it.context["repeater"] as ParsingContext).context["str"] as String
                         )
                     )
@@ -171,20 +174,44 @@ open class EnglishLetters() : Parser {
             }.parse(context)
 }
 
+class CustomWord(
+    vararg val parsers: Parser,
+    val joinBetween: (contexts: List<ParsingContext>) -> ParsingContext = { AnyCharacter.join(it, "", "character") }
+) : Parser {
+    override fun getType() = "CustomWord"
+
+    override fun parse(context: ParsingContext): ParsingContext {
+        return RepeatAndJoin(Any(*parsers)) { joinBetween(it) }
+            .map {
+                it.copy(
+                    type = getType(),
+                    context = hashMapOf(
+                        Pair(
+                            "word",
+                            it.context["joint"]!!
+                        )
+                    )
+                )
+            }.parse(context)
+    }
+}
+
 class Word() : Parser {
     override fun getType() = "Word"
 
     override fun parse(context: ParsingContext): ParsingContext {
-        return EnglishLetters().map {
-            it.copy(
-                context =  hashMapOf(
-                    Pair(
-                        "word",
-                        it.context["letters"]!!
+        return RepeatAndJoin(EnglishLetter()) { AnyCharacter.join(it, "", "letter") }
+            .map {
+                it.copy(
+                    type = getType(),
+                    context = hashMapOf(
+                        Pair(
+                            "word",
+                            it.context["joint"]!!
+                        )
                     )
                 )
-            )
-        }.parse(context)
+            }.parse(context)
     }
 }
 
@@ -239,6 +266,12 @@ class EnglishLetter : EndOfInputParser() {
                 indexEnd = currentIndex,
             )
         }
+    }
+
+    fun asChar(): Parser {
+        return this.map { it.copy(
+            type = "Character",
+            context = hashMapOf(Pair("character", it.context["letter"].toString()))) }
     }
 }
 
@@ -349,11 +382,13 @@ class RepeatableBetween(
         return sequenceOf.map {
             val between = (it.context["sequence"] as List<ParsingContext>)[1]
             val repeaters = (between.context["repeaters"] as List<ParsingContext>)
-            it.copy(context = hashMapOf(
-                Pair("between", repeaters),
-                Pair("left", (it.context["sequence"] as List<ParsingContext>)[0]),
-                Pair("right", (it.context["sequence"] as List<ParsingContext>)[2])
-            ))
+            it.copy(
+                context = hashMapOf(
+                    Pair("between", repeaters),
+                    Pair("left", (it.context["sequence"] as List<ParsingContext>)[0]),
+                    Pair("right", (it.context["sequence"] as List<ParsingContext>)[2])
+                )
+            )
         }.parse(context).copy(
             type = getType(),
             indexStart = context.indexStart + 1

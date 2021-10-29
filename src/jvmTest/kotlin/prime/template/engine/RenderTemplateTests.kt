@@ -43,7 +43,7 @@ class RenderTemplateTests {
     @Test
     fun testRenderExtended() {
         val renderedTemplate = renderTemplate(
-            listOf("prime", "template", "engine", "testRenderExtended", "parent.txt.prime"),
+            listOf("prime", "template", "engine", "testRenderExtended", "child.txt.prime"),
             hashMapOf(Pair("name", "User's name"))
         )
         assertEquals(Optional.of(Template("Parent B")), renderedTemplate)

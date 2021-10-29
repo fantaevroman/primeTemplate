@@ -22,7 +22,7 @@ class PrimeTemplateInterpreter(
             }
 
         return if (extendPathOpt.isPresent) {
-            interpretTemplate(extendPathOpt.get().splitToSequence("/").toList(), variables)
+            interpretTemplate(extendPathOpt.get().splitToSequence("/").toList().filter { it.isNotEmpty() }, variables)
         } else {
             val withBody = addBodyContext(template, contexts)
             return Optional.of(withBody)
