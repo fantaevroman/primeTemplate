@@ -15,23 +15,28 @@ class TemplateEngine constructor(
 ) {
 
     fun renderTemplate(path: List<String>, variables: Map<String, String>): Optional<Template> {
-        return findTemplate(path)
-            .map { template ->
-                val parsedTemplateContexts = allBlocksInTemplate().parse(createContext(template.text)).context["textAndBlocks"] as List<ParsingContext>
-                val transformedContexts = interpreter.performContextTransformation(parsedTemplateContexts, template)
-                val templateBody = interpreter.renderContexts(transformedContexts, variables)
+        return interpretTemplate(path, variables).map {
+            val templateBody = interpreter.renderContexts(it, variables)
+            Template(templateBody.second)
+        }
+    }
 
-                Template(templateBody.second)
+    private fun interpretTemplate(path: List<String>, variables: Map<String, String>): Optional<List<ParsingContext>> {
+        return findTemplate(path)
+            .flatMap { template ->
+                val parsedTemplateContexts =
+                    allBlocksInTemplate().parse(createContext(template.text)).context["textAndBlocks"] as List<ParsingContext>
+                interpreter.performContextTransformation(
+                    parsedTemplateContexts,
+                    variables,
+                    template,
+                    this::interpretTemplate
+                )
             }
     }
 
-    fun findTemplate(path: List<String>): Optional<Template> {
+    private fun findTemplate(path: List<String>): Optional<Template> {
         return templateCache.cacheTemplate(templateFetcher.fetchTemplate(pathResolver.resolvePath(path)))
     }
-
-    data class TemplateWithInstructions(
-        val templateWithReplacedInstructions: Template,
-        val instructionWithReplaceId: Set<Pair<Instruction, String>>
-    )
 }
 
