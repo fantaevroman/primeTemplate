@@ -46,6 +46,6 @@ class RenderTemplateTests {
             listOf("prime", "template", "engine", "testRenderExtended", "child.txt.prime"),
             hashMapOf(Pair("name", "User's name"))
         )
-        assertEquals(Optional.of(Template("Parent B")), renderedTemplate)
+        assertEquals(Optional.of(Template("Parent B Section B modified from child C!")), renderedTemplate)
     }
 }

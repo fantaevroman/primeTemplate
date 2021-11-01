@@ -1,2 +1,4 @@
 {{ extend "/prime/template/engine/testRenderExtended/parent.txt.prime" }}
+
 Child C
+{{ section "B" }}Section B modified from child C{{ end section "B" }}

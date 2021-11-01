@@ -9,7 +9,7 @@ fun createContext(text: String) = ParsingContext(text, -1, -1, emptyMap(), "empt
 
 abstract class EndOfInputParser : Parser {
     override fun parse(context: ParsingContext): ParsingContext {
-        val currentIndex = context.indexStart + 1
+        val currentIndex = context.indexEnd + 1
         return if (context.text.length - 1 < currentIndex) {
             context.copy(
                 error = Optional.of(ParsingError("Can't parse at index:[${currentIndex}] end of text")),
@@ -519,7 +519,7 @@ class End() : Parser {
     override fun getType() = "End"
 
     override fun parse(context: ParsingContext): ParsingContext {
-        val currentIndex = context.indexStart + 1
+        val currentIndex = context.indexEnd + 1
         return if (context.text.length - 1 < currentIndex) {
             context.copy(
                 indexStart = currentIndex,

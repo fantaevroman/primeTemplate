@@ -3,6 +3,7 @@ package prime.template.engine
 import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
 import prime.template.engine.language.allBlocksInTemplate
+import prime.template.engine.language.block
 import prime.template.interpreter.Instruction
 import prime.template.interpreter.PrimeTemplateInterpreter
 import java.util.*

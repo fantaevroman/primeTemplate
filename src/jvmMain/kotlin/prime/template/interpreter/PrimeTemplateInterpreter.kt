@@ -3,6 +3,7 @@ package prime.template.interpreter
 import prime.combinator.ParsingContext
 import prime.template.engine.Template
 import java.util.*
+import kotlin.collections.ArrayList
 
 typealias InterpretTemplateFnType = (path: List<String>, variables: Map<String, String>) -> Optional<List<ParsingContext>>
 
@@ -23,10 +24,35 @@ class PrimeTemplateInterpreter(
 
         return if (extendPathOpt.isPresent) {
             interpretTemplate(extendPathOpt.get().splitToSequence("/").toList().filter { it.isNotEmpty() }, variables)
+                .map { interpretedParentContexts ->
+                    replaceSections(contexts, interpretedParentContexts)
+                }
         } else {
             val withBody = addBodyContext(template, contexts)
             return Optional.of(withBody)
         }
+    }
+
+
+    private fun replaceSections(source: List<ParsingContext>, target: List<ParsingContext>): List<ParsingContext> {
+        val sectionNameWithTemplateContext = source.filter { SectionInstruction().supportContext(it) }.map {
+            Pair(SectionInstruction().processInstruction(it).context["sectionName"], it)
+        }.toMap()
+
+        val targetMutable = ArrayList(target)
+        targetMutable.replaceAll { from ->
+            if (SectionInstruction().supportContext(from)) {
+                val processInstruction = SectionInstruction().processInstruction(from)
+                sectionNameWithTemplateContext.getOrDefault(processInstruction.context["sectionName"], from).copy(
+                    indexStart = from.indexStart,
+                    indexEnd = from.indexEnd
+                )
+            } else {
+                from
+            }
+        }
+
+        return targetMutable
     }
 
     private fun addBodyContext(
