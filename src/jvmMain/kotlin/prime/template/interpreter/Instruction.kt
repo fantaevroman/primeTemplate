@@ -9,7 +9,8 @@ interface Instruction {
         text: StringBuilder,
         variables: Map<String, String>,
         charsShift: Int,
-        renderTemplate: RenderTemplateFnType
+        renderTemplate: RenderTemplateFnType,
+        renderText: RenderTextFnType
     ): Int
 }
 
@@ -17,7 +18,8 @@ abstract class BlockInstruction(val blockType: String) : Instruction {
     abstract fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext
     abstract fun generateNewText(processedInstructionContext: ParsingContext,
                                  variables: Map<String, String>,
-                                 renderTemplate: RenderTemplateFnType): String
+                                 renderTemplate: RenderTemplateFnType,
+                                 renderText: RenderTextFnType): String
 
     override fun supportContext(templateInstructionContext: ParsingContext): Boolean {
         return if (templateInstructionContext.type == blockType) {
@@ -44,10 +46,11 @@ abstract class BlockInstruction(val blockType: String) : Instruction {
         text: StringBuilder,
         variables: Map<String, String>,
         charsShift: Int,
-        renderTemplate: RenderTemplateFnType
+        renderTemplate: RenderTemplateFnType,
+        renderText: RenderTextFnType
     ): Int {
         val processedInstructionContext = processInstruction(templateInstructionContext)
-        val renderedInstructionText = generateNewText(processedInstructionContext, variables, renderTemplate)
+        val renderedInstructionText = generateNewText(processedInstructionContext, variables, renderTemplate, renderText)
         return replace(templateInstructionContext, text, charsShift, renderedInstructionText)
     }
 }

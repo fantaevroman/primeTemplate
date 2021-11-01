@@ -35,7 +35,9 @@ class IncludeInstruction() : BlockInstruction("Block") {
 
     override fun generateNewText(processedInstructionContext: ParsingContext,
                                  variables: Map<String, String>,
-                                 renderTemplate: RenderTemplateFnType): String {
+                                 renderTemplate: RenderTemplateFnType,
+                                 renderText: RenderTextFnType
+    ): String {
         return renderTemplate(getPath(processedInstructionContext), variables)
             .map { it.text }
             .orElseGet { "Template not found" }

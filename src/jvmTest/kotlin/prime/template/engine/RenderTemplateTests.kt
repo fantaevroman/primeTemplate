@@ -55,4 +55,13 @@ class RenderTemplateTests {
         )
         assertEquals(Optional.of(Template("Base template: Included template text")), renderedTemplate)
     }
+
+    @Test
+    fun testRenderExtendWithInclusion() {
+        val renderedTemplate = renderTemplate(
+            listOf("prime", "template", "engine", "testRenderExtendWithInclusion", "child.txt.prime"),
+            hashMapOf(Pair("name", "User's name"))
+        )
+        assertEquals(Optional.of(Template("Parent B: Section B with included text!")), renderedTemplate)
+    }
 }

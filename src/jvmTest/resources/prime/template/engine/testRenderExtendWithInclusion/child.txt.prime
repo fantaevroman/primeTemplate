@@ -1,0 +1,4 @@
+{{ extend "/prime/template/engine/testRenderExtendWithInclusion/parent.txt.prime" }}
+
+Child C
+{{ section "B" }}{{ include "/prime/template/engine/testRenderExtendWithInclusion/included.txt.prime"}}{{ end section "B" }}

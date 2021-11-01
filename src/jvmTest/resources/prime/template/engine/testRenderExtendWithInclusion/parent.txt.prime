@@ -1,0 +1,1 @@
+Parent B: {{ section "B" }}Parent B section{{ end section "B" }}!

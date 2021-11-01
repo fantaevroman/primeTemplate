@@ -26,9 +26,14 @@ class SectionInstruction() : BlockInstruction("DoubleBlock") {
         )
     }
 
+    private fun getSectionBody(processedInstructionContext: ParsingContext): String{
+        return processedInstructionContext.context["body"].toString()
+    }
+
     override fun generateNewText(processedInstructionContext: ParsingContext,
                                  variables: Map<String, String>,
-                                 renderTemplate: RenderTemplateFnType): String {
-        return processedInstructionContext.context["body"].toString()
+                                 renderTemplate: RenderTemplateFnType,
+                                 renderText: RenderTextFnType): String {
+        return renderText(getSectionBody(processedInstructionContext), variables).orElseGet { "Cant find template" }
     }
 }

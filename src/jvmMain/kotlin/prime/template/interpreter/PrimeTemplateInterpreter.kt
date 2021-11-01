@@ -7,6 +7,7 @@ import kotlin.collections.ArrayList
 
 typealias InterpretTemplateFnType = (path: List<String>, variables: Map<String, String>) -> Optional<List<ParsingContext>>
 typealias RenderTemplateFnType = (path: List<String>, variables: Map<String, String>) -> Optional<Template>
+typealias RenderTextFnType = (String, Map<String, String>) -> Optional<String>
 
 class PrimeTemplateInterpreter(
     val supportedInstructions: Set<Instruction>
@@ -15,7 +16,7 @@ class PrimeTemplateInterpreter(
     fun performContextTransformation(
         contexts: List<ParsingContext>,
         variables: Map<String, String>,
-        template: Template,
+        text: String,
         interpretTemplate: InterpretTemplateFnType
     ): Optional<List<ParsingContext>> {
         val extendPathOpt = Optional.ofNullable(contexts.find { ExtendInstruction().supportContext(it) })
@@ -29,11 +30,10 @@ class PrimeTemplateInterpreter(
                     replaceSections(contexts, interpretedParentContexts)
                 }
         } else {
-            val withBody = addBodyContext(template, contexts)
+            val withBody = addBodyContext(text, contexts)
             return Optional.of(withBody)
         }
     }
-
 
     private fun replaceSections(source: List<ParsingContext>, target: List<ParsingContext>): List<ParsingContext> {
         val sectionNameWithTemplateContext = source.filter { SectionInstruction().supportContext(it) }.map {
@@ -57,7 +57,7 @@ class PrimeTemplateInterpreter(
     }
 
     private fun addBodyContext(
-        template: Template,
+        text: String,
         contexts: List<ParsingContext>
     ): MutableList<ParsingContext> {
         val withBody = mutableListOf<ParsingContext>()
@@ -65,8 +65,8 @@ class PrimeTemplateInterpreter(
             ParsingContext(
                 "",
                 0,
-                template.text.length.toLong() - 1,
-                mapOf(Pair("body", template.text)),
+                text.length.toLong() - 1,
+                mapOf(Pair("body", text)),
                 "body",
                 Optional.empty()
             )
@@ -75,9 +75,12 @@ class PrimeTemplateInterpreter(
         return withBody
     }
 
-    fun renderContexts(contexts: List<ParsingContext>,
-                       variables: Map<String, String>,
-                       renderTemplate: RenderTemplateFnType): Pair<String?, String> {
+    fun renderContexts(
+        contexts: List<ParsingContext>,
+        variables: Map<String, String>,
+        renderTemplate: RenderTemplateFnType,
+        renderText: RenderTextFnType
+    ): Pair<String?, String> {
         val body = contexts.first { it.type == "body" }
         val bodyText = body.context["body"] as String
         val mutableTemplate = StringBuilder(bodyText)
@@ -93,7 +96,14 @@ class PrimeTemplateInterpreter(
                     bodyText
                 )
             } else {
-                charactersShift = instruction.replaceInText(context, mutableTemplate, variables, charactersShift, renderTemplate)
+                charactersShift = instruction.replaceInText(
+                    context,
+                    mutableTemplate,
+                    variables,
+                    charactersShift,
+                    renderTemplate,
+                    renderText
+                )
             }
         }
 

@@ -10,15 +10,23 @@ class VariableInstruction() : BlockInstruction("Block") {
         return SequenceOf(Beginning(), Word(), End())
             .map {
                 it.copy(
-                    context = hashMapOf(Pair("word", (it.context["sequence"] as List<ParsingContext>)[1].context["word"].toString()))
+                    context = hashMapOf(
+                        Pair(
+                            "word",
+                            (it.context["sequence"] as List<ParsingContext>)[1].context["word"].toString()
+                        )
+                    )
                 )
             }
             .parse(createContext(instructionBodyTrimmed))
     }
 
-    override fun generateNewText(processedInstructionContext: ParsingContext,
-                                 variables: Map<String, String>,
-                                 renderTemplate: RenderTemplateFnType): String {
+    override fun generateNewText(
+        processedInstructionContext: ParsingContext,
+        variables: Map<String, String>,
+        renderTemplate: RenderTemplateFnType,
+        renderText: RenderTextFnType
+    ): String {
         val variableName = processedInstructionContext.context["word"] as String
         return variables.getOrDefault(variableName, "variable:[$variableName] not found")
     }
