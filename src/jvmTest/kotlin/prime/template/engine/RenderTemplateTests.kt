@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Test
 import prime.template.engine.classloader.ClassLoaderTemplateFetcher
 import prime.template.engine.common.NoTemplateCache
 import prime.template.engine.common.SamePathResolver
-import prime.template.interpreter.ExtendInstruction
-import prime.template.interpreter.PrimeTemplateInterpreter
-import prime.template.interpreter.SectionInstruction
-import prime.template.interpreter.VariableInstruction
+import prime.template.interpreter.*
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -23,7 +20,8 @@ class RenderTemplateTests {
                     hashSetOf(
                         VariableInstruction(),
                         SectionInstruction(),
-                        ExtendInstruction()
+                        ExtendInstruction(),
+                        IncludeInstruction()
                     )
                 )
             ).renderTemplate(
@@ -47,5 +45,14 @@ class RenderTemplateTests {
             hashMapOf(Pair("name", "User's name"))
         )
         assertEquals(Optional.of(Template("Parent B Section B modified from child C!")), renderedTemplate)
+    }
+
+    @Test
+    fun testRenderIncluded() {
+        val renderedTemplate = renderTemplate(
+            listOf("prime", "template", "engine", "testRenderIncluded", "base.txt.prime"),
+            hashMapOf(Pair("name", "User's name"))
+        )
+        assertEquals(Optional.of(Template("Base template: Included template text")), renderedTemplate)
     }
 }

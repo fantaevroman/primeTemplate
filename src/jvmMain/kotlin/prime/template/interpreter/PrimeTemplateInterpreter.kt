@@ -6,6 +6,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 typealias InterpretTemplateFnType = (path: List<String>, variables: Map<String, String>) -> Optional<List<ParsingContext>>
+typealias RenderTemplateFnType = (path: List<String>, variables: Map<String, String>) -> Optional<Template>
 
 class PrimeTemplateInterpreter(
     val supportedInstructions: Set<Instruction>
@@ -74,7 +75,9 @@ class PrimeTemplateInterpreter(
         return withBody
     }
 
-    fun renderContexts(contexts: List<ParsingContext>, variables: Map<String, String>): Pair<String?, String> {
+    fun renderContexts(contexts: List<ParsingContext>,
+                       variables: Map<String, String>,
+                       renderTemplate: RenderTemplateFnType): Pair<String?, String> {
         val body = contexts.first { it.type == "body" }
         val bodyText = body.context["body"] as String
         val mutableTemplate = StringBuilder(bodyText)
@@ -90,7 +93,7 @@ class PrimeTemplateInterpreter(
                     bodyText
                 )
             } else {
-                charactersShift = instruction.replaceInText(context, mutableTemplate, variables, charactersShift)
+                charactersShift = instruction.replaceInText(context, mutableTemplate, variables, charactersShift, renderTemplate)
             }
         }
 

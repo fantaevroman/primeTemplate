@@ -1,0 +1,1 @@
+Base template: {{ include "/prime/template/engine/testRenderIncluded/included.txt.prime" }}

@@ -17,7 +17,7 @@ class TemplateEngine constructor(
 
     fun renderTemplate(path: List<String>, variables: Map<String, String>): Optional<Template> {
         return interpretTemplate(path, variables).map {
-            val templateBody = interpreter.renderContexts(it, variables)
+            val templateBody = interpreter.renderContexts(it, variables, this::renderTemplate)
             Template(templateBody.second)
         }
     }

@@ -3,9 +3,9 @@ package prime.template.interpreter
 import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
 
-class ExtendInstruction() : BlockInstruction("Block") {
-    val sequenceOf = SequenceOf(
-        Str("extend"),
+class IncludeInstruction() : BlockInstruction("Block") {
+    private val sequenceOf = SequenceOf(
+        Str("include"),
         Spaces(),
         DoubleQuote(),
         CustomWord(EnglishLetter().asChar(), Character('/'), Character('.')),
@@ -25,13 +25,19 @@ class ExtendInstruction() : BlockInstruction("Block") {
         return sequenceOf.parse(createContext((templateInstructionContext.context["body"] as String).trim()))
     }
 
-    fun getPath(templateInstructionContext: ParsingContext): String {
-        return sequenceOf.parse(createContext((templateInstructionContext.context["body"] as String).trim())).context["path"].toString()
+    private fun getPath(templateInstructionContext: ParsingContext): List<String> {
+        return templateInstructionContext.context["path"]
+            .toString()
+            .splitToSequence("/")
+            .toList()
+            .filter { it.isNotEmpty() }
     }
 
     override fun generateNewText(processedInstructionContext: ParsingContext,
                                  variables: Map<String, String>,
                                  renderTemplate: RenderTemplateFnType): String {
-        return ""
+        return renderTemplate(getPath(processedInstructionContext), variables)
+            .map { it.text }
+            .orElseGet { "Template not found" }
     }
 }

@@ -8,13 +8,16 @@ interface Instruction {
         templateInstructionContext: ParsingContext,
         text: StringBuilder,
         variables: Map<String, String>,
-        charsShift: Int
+        charsShift: Int,
+        renderTemplate: RenderTemplateFnType
     ): Int
 }
 
 abstract class BlockInstruction(val blockType: String) : Instruction {
     abstract fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext
-    abstract fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String
+    abstract fun generateNewText(processedInstructionContext: ParsingContext,
+                                 variables: Map<String, String>,
+                                 renderTemplate: RenderTemplateFnType): String
 
     override fun supportContext(templateInstructionContext: ParsingContext): Boolean {
         return if (templateInstructionContext.type == blockType) {
@@ -40,10 +43,11 @@ abstract class BlockInstruction(val blockType: String) : Instruction {
         templateInstructionContext: ParsingContext,
         text: StringBuilder,
         variables: Map<String, String>,
-        charsShift: Int
+        charsShift: Int,
+        renderTemplate: RenderTemplateFnType
     ): Int {
         val processedInstructionContext = processInstruction(templateInstructionContext)
-        val renderedInstructionText = generateNewText(processedInstructionContext, variables)
+        val renderedInstructionText = generateNewText(processedInstructionContext, variables, renderTemplate)
         return replace(templateInstructionContext, text, charsShift, renderedInstructionText)
     }
 }

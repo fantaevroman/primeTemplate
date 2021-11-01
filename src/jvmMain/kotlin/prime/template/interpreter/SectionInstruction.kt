@@ -26,7 +26,9 @@ class SectionInstruction() : BlockInstruction("DoubleBlock") {
         )
     }
 
-    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
+    override fun generateNewText(processedInstructionContext: ParsingContext,
+                                 variables: Map<String, String>,
+                                 renderTemplate: RenderTemplateFnType): String {
         return processedInstructionContext.context["body"].toString()
     }
 }

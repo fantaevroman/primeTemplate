@@ -16,7 +16,9 @@ class VariableInstruction() : BlockInstruction("Block") {
             .parse(createContext(instructionBodyTrimmed))
     }
 
-    override fun generateNewText(processedInstructionContext: ParsingContext, variables: Map<String, String>): String {
+    override fun generateNewText(processedInstructionContext: ParsingContext,
+                                 variables: Map<String, String>,
+                                 renderTemplate: RenderTemplateFnType): String {
         val variableName = processedInstructionContext.context["word"] as String
         return variables.getOrDefault(variableName, "variable:[$variableName] not found")
     }
