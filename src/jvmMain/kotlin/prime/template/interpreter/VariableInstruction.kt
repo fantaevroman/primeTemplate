@@ -1,7 +1,10 @@
 package prime.template.interpreter
 
-import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
+import prime.combinator.pasers.implementations.Beginning
+import prime.combinator.pasers.implementations.End
+import prime.combinator.pasers.implementations.SequenceOf
+import prime.combinator.pasers.implementations.Word
 
 class VariableInstruction() : BlockInstruction("Block") {
     override fun processInstruction(templateInstructionContext: ParsingContext): ParsingContext {

@@ -1,6 +1,7 @@
 package prime.template.interpreter
 
-import prime.combinator.ParsingContext
+import prime.combinator.pasers.ParsingContext
+
 
 interface Instruction {
     fun supportContext(templateInstructionContext: ParsingContext): Boolean

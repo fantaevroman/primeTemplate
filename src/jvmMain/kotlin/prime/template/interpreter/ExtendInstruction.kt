@@ -1,7 +1,7 @@
 package prime.template.interpreter
 
-import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
+import prime.combinator.pasers.implementations.*
 
 class ExtendInstruction() : BlockInstruction("Block") {
     val sequenceOf = SequenceOf(

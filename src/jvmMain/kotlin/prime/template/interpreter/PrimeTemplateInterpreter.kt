@@ -1,6 +1,6 @@
 package prime.template.interpreter
 
-import prime.combinator.ParsingContext
+import prime.combinator.pasers.ParsingContext
 import prime.template.engine.Template
 import java.util.*
 import kotlin.collections.ArrayList

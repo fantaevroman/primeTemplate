@@ -1,9 +1,8 @@
 package prime.template.engine.language
 
-import prime.combinator.Parser
-import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
-import prime.combinator.pasers.Any
+import prime.combinator.pasers.implementations.*
+import kotlin.Any
 
 
 // {{ name }}

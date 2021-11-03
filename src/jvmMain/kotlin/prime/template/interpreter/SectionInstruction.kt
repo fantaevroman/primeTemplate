@@ -1,7 +1,7 @@
 package prime.template.interpreter
 
-import prime.combinator.ParsingContext
 import prime.combinator.pasers.*
+import prime.combinator.pasers.implementations.*
 
 class SectionInstruction() : BlockInstruction("DoubleBlock") {
     val sequenceOf = SequenceOf(Str("section"), Spaces(), DoubleQuote(), Word(), DoubleQuote()).map {

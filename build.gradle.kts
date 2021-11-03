@@ -8,6 +8,7 @@ version = "0.1"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 kotlin {
@@ -22,6 +23,9 @@ kotlin {
     }
     sourceSets {
         val jvmMain by getting
+        dependencies {
+            implementation("com.primeframeworks:primeCombinator:0.2")
+        }
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit5"))
